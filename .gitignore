@@ -1,0 +1,18 @@
+# Diretórios do VS Code
+.vscode/
+
+# Binários, compilados e temporários
+*.exe
+*.out
+*.o
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
+
+# Backup e logs
+*.log
+*.tmp
+
+# Git
+.gitignore
