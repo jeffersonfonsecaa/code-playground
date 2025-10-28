@@ -1,13 +1,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 
 /*
  * Jogo da Velha simples em C
  * 
  * Implementa a lógica básica do jogo entre dois jogadores humanos,
- * exibindo o tabuleiro no terminal e verificando condições de vitória.
+ * exibindo o tabuleiro no terminal e verificando condições de vitória e empate.
  * 
  * Futuramente serão adicionadas melhorias na validação de entradas,
  * no tratamento de erros e na clareza semântica do código.
@@ -17,13 +18,16 @@
  */
 
 
+#define BOARD_SIZE 3
+#define MAX_MOVES 9
+
 
 struct player {
     char name[9];
-    char simbol;
+    char symbol;
 };
 
-void createBoard(char board[3][3]) {
+void createBoard(char board[BOARD_SIZE][BOARD_SIZE]) {
     for (int i=0; i < 3; i++) {
         for (int j=0; j < 3; j++) {
             board[i][j] = ' ';
@@ -32,21 +36,20 @@ void createBoard(char board[3][3]) {
 
 }
 
-void showBoard(const char board[3][3]) {
+void showBoard(const char board[BOARD_SIZE][BOARD_SIZE]) {
     for (int i=0; i < 3; i++) {
         printf("\n");
         for (int j=0; j < 3; j++) {
             printf(" %c ", board[i][j]);
             if (j < 2) printf("|");
         }
-        printf("");
         if (i < 2) printf("\n---+---+---");
     }
     
     printf("\n\n");
 }
 
-bool winCheck(const char board[3][3]) {
+bool winCheck(const char board[BOARD_SIZE][BOARD_SIZE]) {
     int row1, row2, row3,
         col1, col2, col3;
 
@@ -79,84 +82,119 @@ bool winCheck(const char board[3][3]) {
     return false;
 }
 
-int main() {
-    char boardGame[3][3];
-    int row, col;
+bool restartGameInputChoice() {
+    int input;
 
-    int input = 0,
-        playerTurn = 0;
-    bool gameLoop = true;
+    do {
+        printf("Deseja jogar novamente? (1 - Sim | 0 - Nao): ");
+        scanf("%d", &input);
+
+        switch (input) {
+            case 0:
+                printf("\nObrigado por jogar!\n");
+                return false;
+                break;
+            
+            case 1:
+                return true;
+                break;
+
+            default:
+                printf("Opcao invalida...\n");
+                break;
+        }
+
+    } while (input != 0 && input != 1);
+
+}
+
+void runGame() {
+    char boardGame[BOARD_SIZE][BOARD_SIZE];
+    int row, col;
     
+    int input = 0,
+        playerTurn = 0,
+        totalMovements = 0;
+    
+    bool gameLoop = true,
+         gameFinish = false;
     
     struct player players[2] = {
         {"Player 1", 'X'},
         {"Player 2", 'O'}
     };
-
+    
     
     createBoard(boardGame);
     printf("\nWelcome to tik tak toe!\n");
-
+    
     do {
         showBoard(boardGame);
-
+    
         do { // Player input
             do {
-                printf("%s (%c), escolha uma coluna valida para jogar: ", players[playerTurn].name, players[playerTurn].simbol);
+                printf("%s (%c), escolha uma coluna valida para jogar: ", players[playerTurn].name, players[playerTurn].symbol);
                 scanf("%d", &input);
             } while (input < 1 || input > 3);
     
             col = input-1;
             
             do {
-                printf("%s (%c), escolha uma linha valida para jogar: ", players[playerTurn].name, players[playerTurn].simbol);
+                printf("%s (%c), escolha uma linha valida para jogar: ", players[playerTurn].name, players[playerTurn].symbol);
                 scanf("%d", &input);
             } while (input < 1 || input > 3);
     
             row = input-1;
-
+    
             if (boardGame[row][col] != ' ') {
                 showBoard(boardGame);
                 printf("\n\tEste lugar esta ocupado, escolha outro!\n");
             }
-
+    
         } while (boardGame[row][col] != ' ');
-
-        boardGame[row][col] = players[playerTurn].simbol;
-
-
+    
+        boardGame[row][col] = players[playerTurn].symbol;
+        totalMovements += 1;
+    
+    
         if (winCheck(boardGame)) {
             showBoard(boardGame);
-
+    
             printf("\n***** %s venceu! *****\n", players[playerTurn].name);
-
-            do {
-                printf("Deseja jogar novamente? (1 - Sim | 0 - Nao): ");
-                scanf("%d", &input);
-
-                switch (input) {
-                    case 0:
-                        printf("\nObrigado por jogar!\n");
-                        gameLoop = false;
-                        break;
-                    
-                    case 1:
-                        createBoard(boardGame);
-                        playerTurn = 1;
-                        break;
-
-                    default:
-                        printf("Opcao invalida...\n");
-                        break;
-                }
-            } while (input != 0 && input != 1);
-
+            gameFinish = true;
+    
+        } else {
+            if (totalMovements == MAX_MOVES) {
+                showBoard(boardGame);
+                
+                printf("\n***** Empate! *****\n");
+                gameFinish = true;
+            }
+    
         }
-
         
-        playerTurn = (playerTurn == 0 ? 1 : 0);
+        if (gameFinish) {
+            if (restartGameInputChoice()) {
+                totalMovements = 0;
+                playerTurn = 0;
+                gameFinish = false;
 
+                createBoard(boardGame);
+            } else {
+                gameLoop = false;
+            }  
+            
+            continue;
+        }
+    
+        playerTurn = (playerTurn == 0 ? 1 : 0);
+    
     } while (gameLoop);
 
+}
+
+
+int main() {
+    runGame();
     return 0;
 }
